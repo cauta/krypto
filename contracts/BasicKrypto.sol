@@ -93,12 +93,7 @@ contract BasicKrypto is ERC223 {
         //standard function transfer similar to ERC20 transfer with no _data
         //added due to backwards compatibility reasons
         bytes memory empty;
-        if(isContract(_to)) {
-            return transferToContract(_to, _value, empty);
-        }
-        else {
-            return transferToAddress(_to, _value);
-        }
+        return transfer(_to, _value, empty);
     }
     
     // Function that is called when a user or another contract wants to transfer funds .
@@ -106,12 +101,16 @@ contract BasicKrypto is ERC223 {
     public
     isTradable 
     returns (bool success) {
+        require(_to != 0x0);
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        balances[_to] = balanceOf(_to).add(_value);
+        Transfer(msg.sender, _to, _value);
         if(isContract(_to)) {
-            return transferToContract(_to, _value, _data);
+            ContractReceiver receiver = ContractReceiver(_to);
+            receiver.tokenFallback(msg.sender, _value, _data);
+            Transfer(msg.sender, _to, _value, _data);
         }
-        else {
-            return transferToAddress(_to, _value);
-        }
+        return true;
     }
     
     // Function that is called when a user or another contract wants to transfer funds .
@@ -119,38 +118,35 @@ contract BasicKrypto is ERC223 {
     public 
     isTradable
     returns (bool success) {
+        require(_to != 0x0);
+        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+        balances[_to] = balanceOf(_to).add(_value);
+        Transfer(msg.sender, _to, _value);
+
         if(isContract(_to)) {
-            if (balanceOf(msg.sender) < _value) revert();
-            balances[msg.sender] = balanceOf(msg.sender).sub(_value);
-            balances[_to] = balanceOf(_to).add(_value);
             assert(_to.call.value(0)(bytes4(keccak256(_custom_fallback)), msg.sender, _value, _data));
             Transfer(msg.sender, _to, _value, _data);
-            return true;
         }
-        else {
-            return transferToAddress(_to, _value);
-        }
-    }
-    
-    //function that is called when transaction target is an address
-    function transferToAddress(address _to, uint _value) private returns (bool success) {
-        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
-        balances[_to] = balanceOf(_to).add(_value);
-        Transfer(msg.sender, _to, _value);
         return true;
     }
     
-      //function that is called when transaction target is a contract
-     function transferToContract(address _to, uint _value, bytes _data) private returns (bool success) {
-        if (balanceOf(msg.sender) < _value) revert();
-        balances[msg.sender] = balanceOf(msg.sender).sub(_value);
-        balances[_to] = balanceOf(_to).add(_value);
-        ContractReceiver receiver = ContractReceiver(_to);
-        receiver.tokenFallback(msg.sender, _value, _data);
-        Transfer(msg.sender, _to, _value);
-        Transfer(msg.sender, _to, _value, _data);
-        return true;
-    }
+    // //function that is called when transaction target is an address
+    // function transferToAddress(address _to, uint _value) private returns (bool success) {
+    //     require(_to != 0x0);
+    //     require(_to != address(this));
+    //     balances[msg.sender] = balanceOf(msg.sender).sub(_value);
+    //     balances[_to] = balanceOf(_to).add(_value);
+    //     Transfer(msg.sender, _to, _value);
+    //     return true;
+    // }
+    
+    //   //function that is called when transaction target is a contract
+    //  function transferToContract(address _to, uint _value, bytes _data) private returns (bool success) {
+    //     require(transferToAddress(_to, _value));
+    //     ContractReceiver receiver = ContractReceiver(_to);
+    //     receiver.tokenFallback(msg.sender, _value, _data);
+    //     return true;
+    // }
      
     // Send _value amount of tokens from address _from to address _to
     // The transferFrom method is used for a withdraw workflow, allowing contracts to send
@@ -166,6 +162,7 @@ contract BasicKrypto is ERC223 {
     public
     isTradable
     returns (bool success) {
+        require(_to != 0x0);
         balances[_from] = balances[_from].sub(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
@@ -194,5 +191,11 @@ contract BasicKrypto is ERC223 {
 
     function transferAnyERC20Token(address tokenAddress, uint tokens) public onlyOwner returns (bool success) {
         return ERC223(tokenAddress).transfer(owner, tokens);
+    }
+        
+    function turnOnTradable() 
+        public
+        onlyOwner{
+        tradable = true;
     }
 }
