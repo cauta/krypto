@@ -43,7 +43,7 @@ contract BasicKrypto is ERC223 {
 
     /// @dev Constructor
     function BasicKrypto() 
-        public {
+    public {
         owner = msg.sender;
         balances[owner] = _totalSupply;
         Transfer(0x0, owner, _totalSupply);
@@ -52,9 +52,9 @@ contract BasicKrypto is ERC223 {
     /// @dev Gets totalSupply
     /// @return Total supply
     function totalSupply()
-        public 
-        constant 
-        returns (uint256) {
+    public 
+    constant 
+    returns (uint256) {
         return _totalSupply;
     }
         
@@ -62,15 +62,18 @@ contract BasicKrypto is ERC223 {
     /// @param _addr Address of the account
     /// @return Account balance
     function balanceOf(address _addr) 
-        public
-        constant 
-        returns (uint256) {
+    public
+    constant 
+    returns (uint256) {
         return balances[_addr];
     }
     
     
     //assemble the given address bytecode. If bytecode exists then the _addr is a contract.
-    function isContract(address _addr) private view returns (bool is_contract) {
+    function isContract(address _addr) 
+    private 
+    view 
+    returns (bool is_contract) {
         uint length;
         assembly {
             //retrieve the size of the code on target address, this needs assembly
@@ -89,15 +92,18 @@ contract BasicKrypto is ERC223 {
     public 
     isTradable
     returns (bool success) {
-      
-        //standard function transfer similar to ERC20 transfer with no _data
-        //added due to backwards compatibility reasons
         bytes memory empty;
         return transfer(_to, _value, empty);
     }
     
-    // Function that is called when a user or another contract wants to transfer funds .
-    function transfer(address _to, uint _value, bytes _data) 
+    /// @dev Function that is called when a user or another contract wants to transfer funds .
+    /// @param _to Recipient address
+    /// @param _value Transfer amount in unit
+    /// @param _data the data pass to contract reveiver
+    function transfer(
+        address _to, 
+        uint _value, 
+        bytes _data) 
     public
     isTradable 
     returns (bool success) {
@@ -113,8 +119,16 @@ contract BasicKrypto is ERC223 {
         return true;
     }
     
-    // Function that is called when a user or another contract wants to transfer funds .
-    function transfer(address _to, uint _value, bytes _data, string _custom_fallback) 
+    /// @dev Function that is called when a user or another contract wants to transfer funds .
+    /// @param _to Recipient address
+    /// @param _value Transfer amount in unit
+    /// @param _data the data pass to contract reveiver
+    /// @param _custom_fallback custom name of fallback function
+    function transfer(
+        address _to, 
+        uint _value, 
+        bytes _data, 
+        string _custom_fallback) 
     public 
     isTradable
     returns (bool success) {
@@ -129,25 +143,7 @@ contract BasicKrypto is ERC223 {
         }
         return true;
     }
-    
-    // //function that is called when transaction target is an address
-    // function transferToAddress(address _to, uint _value) private returns (bool success) {
-    //     require(_to != 0x0);
-    //     require(_to != address(this));
-    //     balances[msg.sender] = balanceOf(msg.sender).sub(_value);
-    //     balances[_to] = balanceOf(_to).add(_value);
-    //     Transfer(msg.sender, _to, _value);
-    //     return true;
-    // }
-    
-    //   //function that is called when transaction target is a contract
-    //  function transferToContract(address _to, uint _value, bytes _data) private returns (bool success) {
-    //     require(transferToAddress(_to, _value));
-    //     ContractReceiver receiver = ContractReceiver(_to);
-    //     receiver.tokenFallback(msg.sender, _value, _data);
-    //     return true;
-    // }
-     
+         
     // Send _value amount of tokens from address _from to address _to
     // The transferFrom method is used for a withdraw workflow, allowing contracts to send
     // tokens on your behalf, for example to "deposit" to a contract address and/or to charge
@@ -157,8 +153,7 @@ contract BasicKrypto is ERC223 {
     function transferFrom(
         address _from,
         address _to,
-        uint256 _value
-    )
+        uint256 _value)
     public
     isTradable
     returns (bool success) {
@@ -174,8 +169,8 @@ contract BasicKrypto is ERC223 {
     // Allow _spender to withdraw from your account, multiple times, up to the _value amount.
     // If this function is called again it overwrites the current allowance with _value.
     function approve(address _spender, uint256 _amount) 
-        public
-        returns (bool success) {
+    public
+    returns (bool success) {
         allowed[msg.sender][_spender] = _amount;
         Approval(msg.sender, _spender, _amount);
         return true;
@@ -183,19 +178,22 @@ contract BasicKrypto is ERC223 {
     
     // get allowance
     function allowance(address _owner, address _spender) 
-        public
-        constant 
-        returns (uint256 remaining) {
+    public
+    constant 
+    returns (uint256 remaining) {
         return allowed[_owner][_spender];
     }
 
+    // withdraw any ERC20 token in this contract to owner
     function transferAnyERC20Token(address tokenAddress, uint tokens) public onlyOwner returns (bool success) {
         return ERC223(tokenAddress).transfer(owner, tokens);
     }
-        
+    
+    // allow people can transfer their token
+    // NOTE: can not turn off
     function turnOnTradable() 
-        public
-        onlyOwner{
+    public
+    onlyOwner{
         tradable = true;
     }
 }

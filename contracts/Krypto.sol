@@ -65,18 +65,18 @@ contract Krypto is BasicKrypto {
 
     /// @dev Fallback function allows to buy ether.
     function()
-        public
-        payable {
+    public
+    payable {
         buyKrypto();
     }
     
     /// @dev buy function allows to buy ether. for using optional data
     function buyKrypto()
-        public
-        payable
-        onSale
-        validValue
-        validInvestor {
+    public
+    payable
+    onSale
+    validValue
+    validInvestor {
         uint256 requestedUnits = (msg.value * _originalBuyPrice) / 10**18;
         require(balances[owner] >= requestedUnits);
         // prepare transfer data
@@ -99,33 +99,27 @@ contract Krypto is BasicKrypto {
 
     /// @dev Constructor
     function Krypto() BasicKrypto()
-        public {
+    public {
         setBuyPrice(_originalBuyPrice);
     }
     
     /// @dev Enables sale 
     function turnOnSale() onlyOwner 
-        public {
+    public {
         _selling = true;
     }
 
     /// @dev Disables sale
     function turnOffSale() onlyOwner 
-        public {
+    public {
         _selling = false;
-    }
-    
-    function turnOnTradable() 
-        public
-        onlyOwner{
-        tradable = true;
     }
     
     /// @dev set new icoPercent
     /// @param newIcoPercent new value of icoPercent
     function setIcoPercent(uint256 newIcoPercent)
-        public 
-        onlyOwner {
+    public 
+    onlyOwner {
         _icoPercent = newIcoPercent;
         _icoSupply = _totalSupply * _icoPercent / 100;
     }
@@ -133,16 +127,16 @@ contract Krypto is BasicKrypto {
     /// @dev set new _maximumBuy
     /// @param newMaximumBuy new value of _maximumBuy
     function setMaximumBuy(uint256 newMaximumBuy)
-        public 
-        onlyOwner {
+    public 
+    onlyOwner {
         _maximumBuy = newMaximumBuy;
     }
 
     /// @dev Updates buy price (owner ONLY)
     /// @param newBuyPrice New buy price (in UNIT) 1ETH <=> 10 000 0000000000 unit
     function setBuyPrice(uint256 newBuyPrice) 
-        onlyOwner 
-        public {
+    onlyOwner 
+    public {
         require(newBuyPrice>0);
         _originalBuyPrice = newBuyPrice; // unit
         // control _maximumBuy_USD = 10,000 USD, Krypto price is 0.1USD
@@ -153,9 +147,9 @@ contract Krypto is BasicKrypto {
     /// @dev check address is approved investor
     /// @param _addr address
     function isApprovedInvestor(address _addr)
-        public
-        constant
-        returns (bool) {
+    public
+    constant
+    returns (bool) {
         return approvedInvestorList[_addr];
     }
     
@@ -163,17 +157,17 @@ contract Krypto is BasicKrypto {
     /// @param _addr address get deposit
     /// @return amount deposit of an buyer
     function getDeposit(address _addr)
-        public
-        constant
-        returns(uint256){
+    public
+    constant
+    returns(uint256){
         return deposit[_addr];
 }
     
     /// @dev Adds list of new investors to the investors list and approve all
     /// @param newInvestorList Array of new investors addresses to be added
     function addInvestorList(address[] newInvestorList)
-        onlyOwner
-        public {
+    onlyOwner
+    public {
         for (uint256 i = 0; i < newInvestorList.length; i++){
             approvedInvestorList[newInvestorList[i]] = true;
         }
@@ -182,8 +176,8 @@ contract Krypto is BasicKrypto {
     /// @dev Removes list of investors from list
     /// @param investorList Array of addresses of investors to be removed
     function removeInvestorList(address[] investorList)
-        onlyOwner
-        public {
+    onlyOwner
+    public {
         for (uint256 i = 0; i < investorList.length; i++){
             approvedInvestorList[investorList[i]] = false;
         }
@@ -192,8 +186,8 @@ contract Krypto is BasicKrypto {
     /// @dev Withdraws Ether in contract (Owner only)
     /// @return Status of withdrawal
     function withdraw() onlyOwner 
-        public 
-        returns (bool) {
+    public 
+    returns (bool) {
         return owner.send(this.balance);
     }
 }
