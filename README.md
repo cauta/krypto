@@ -11,7 +11,7 @@ truffle develop
 ## Run test
 local network:
 ```
-truffle test --network dev
+truffle test
 ```
 ropsten testnet:
 ```
