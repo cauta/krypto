@@ -1,68 +1,66 @@
-const krypto = artifacts.require('./Krypto.sol');
+const Krypto = artifacts.require('./Krypto.sol');
 
-contract('krypto', async accounts => {
+contract('Krypto', async accounts => {
     it('msg.sender should be the owner of this contract: ', async () => {
-        const instance = await krypto.deployed();
-        const owner = await instance.owner.call();
+        const contract = await Krypto.deployed();
+        const owner = await contract.owner.call();
         assert.equal(owner, accounts[0], 'first token is not own by owner');
     });
 
     it('balance of owner should be 1,000,000,000 * 10^10: ', async () => {
-        const instance = await krypto.deployed();
-        const balance = await instance.balanceOf.call(accounts[0]);
+        const contract = await Krypto.deployed();
+        const balance = await contract.balanceOf.call(accounts[0]);
         assert.equal(balance, 10 ** 19, 'balance of owner is wrong');
     });
 
     it('turnOnTradable() should do it right', async () => {
         const accountZero = accounts[0];
         const accountOne = accounts[1];
-        const instance = await krypto.deployed();
+        const contract = await Krypto.deployed();
 
-        await instance
+        await contract
             .turnOnTradable({ from: accountOne })
             .catch(function(error) {});
 
-        const tradableOne = await instance.tradable.call();
+        const tradableOne = await contract.tradable.call();
         assert.equal(
             tradableOne,
             false,
             'tradable was turn on not by another address',
         );
 
-        await instance
+        await contract
             .turnOnTradable({ from: accountZero })
             .catch(function(error) {
                 console.log('revert detected from owner address');
             });
 
-        const tradableZero = await instance.tradable.call();
+        const tradableZero = await contract.tradable.call();
         assert.equal(tradableZero, true, 'tradable was not turn on by owner');
     });
 
     it('transfer should do it right', async () => {
-        let accountZero = accounts[0];
-        let accountOne = accounts[1];
-        let amount = 10 ** 13;
+        const accountZero = accounts[0];
+        const accountOne = accounts[1];
+        const amount = 10 ** 13;
 
         let accountZeroStartingBalance;
         let accountOneStartingBalance;
         let accountZeroEndingBalance;
         let accountOneEndingBalance;
 
-        let instance = await krypto.deployed();
-        let krypt = instance;
-
-        let balance = await krypt.balanceOf.call(accountZero);
+        const contract = await Krypto.deployed();
+        let balance = await contract.balanceOf.call(accountZero);
 
         accountZeroStartingBalance = balance.toNumber();
-        balance = await krypt.balanceOf.call(accountOne);
+        balance = await contract.balanceOf.call(accountOne);
         accountOneStartingBalance = balance.toNumber();
 
-        await krypt.transfer(accountOne, amount, { from: accountZero });
+        await contract.transfer(accountOne, amount, { from: accountZero });
 
-        balance = await krypt.balanceOf.call(accountZero);
+        balance = await contract.balanceOf.call(accountZero);
         accountZeroEndingBalance = balance.toNumber();
-        balance = await krypt.balanceOf.call(accountOne);
+        balance = await contract.balanceOf.call(accountOne);
         accountOneEndingBalance = balance.toNumber();
 
         assert.equal(
