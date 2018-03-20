@@ -1,6 +1,26 @@
 const Krypto = artifacts.require('./Krypto.sol');
 
 contract('Krypto', async accounts => {
+
+    it('addInvestorList() -> removeInvestorList() should do it right', async () => {
+        const contract = await Krypto.deployed();
+        const address = 0x03747F06215B44E498831dA019B27f53E483599F;
+
+        // Check is a new investor
+        let isApproved = await contract.isApprovedInvestor(address);
+        assert.equal(isApproved, false, 'Stranger is an approved investor');
+
+        // Add new investor
+        await contract.addInvestorList([address]);
+        isApproved = await contract.isApprovedInvestor(address);
+        assert.equal(isApproved, true, 'Added investor is not approved');
+
+        // Remove new added investor
+        await contract.removeInvestorList([address]);
+        isApproved = await contract.isApprovedInvestor(address);
+        assert.equal(isApproved, false, 'Removed investor is an approved investor');
+    });
+
     it('msg.sender should be the owner of this contract: ', async () => {
         const contract = await Krypto.deployed();
         const owner = await contract.owner.call();
