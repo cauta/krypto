@@ -31,8 +31,9 @@ contract ContractReceiver {
         Token(_from, _value, _data);
     }
     
-    function test(uint256 a) 
-    public{
-        Test(a);
+    function increase(uint256 value)
+    external {
+        require(msg.sender == address(this));
+        a = a+value;
     }
 }
