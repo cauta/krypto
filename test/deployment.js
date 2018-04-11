@@ -1,69 +1,98 @@
-var krypto = artifacts.require("./Krypto.sol");
+const Krypto = artifacts.require('./Krypto.sol');
 
-contract('krypto', async(accounts) => {
+contract('Krypto', async accounts => {
 
-    it("msg.sender should be the owner of this contract: ", function() {
-        return krypto.deployed().then(function(instance) {
-            return instance.owner.call();
-        }).then(function(owner) {
-            assert.equal(owner, accounts[0], "first token is not own by owner");
-        });
+    it('addInvestorList() -> removeInvestorList() should do it right', async () => {
+        const contract = await Krypto.deployed();
+        const address = 0x03747F06215B44E498831dA019B27f53E483599F;
+
+        // Check is a new investor
+        let isApproved = await contract.isApprovedInvestor(address);
+        assert.equal(isApproved, false, 'Stranger is an approved investor');
+
+        // Add new investor
+        await contract.addInvestorList([address]);
+        isApproved = await contract.isApprovedInvestor(address);
+        assert.equal(isApproved, true, 'Added investor is not approved');
+
+        // Remove new added investor
+        await contract.removeInvestorList([address]);
+        isApproved = await contract.isApprovedInvestor(address);
+        assert.equal(isApproved, false, 'Removed investor is an approved investor');
     });
 
-    it("balance of owner should be 1,000,000,000 * 10^10: ", function() {
-        return krypto.deployed().then(function(instance) {
-            return instance.balanceOf.call(accounts[0]);
-        }).then(function(balance) {
-            assert.equal(balance, "10000000000000000000", "balance of owner is wrong");
-        });
+    it('msg.sender should be the owner of this contract: ', async () => {
+        const contract = await Krypto.deployed();
+        const owner = await contract.owner.call();
+        assert.equal(owner, accounts[0], 'first token is not own by owner');
     });
 
-    it("turnOnTradable() should do it right", async() => {
-        var account_zero = accounts[0];
-        var account_one = accounts[1];
-
-        let instance = await krypto.deployed();
-        let krypt = instance;
-
-        await krypt.turnOnTradable({ from: account_one }).catch(function(error) {});
-        let tradable_1 = await krypt.tradable.call();
-        assert.equal(tradable_1, false, "tradable was turn on not by another address");
-
-        await krypt.turnOnTradable({ from: account_zero }).catch(function(error) {
-            console.log("revert detected from owner address");
-        });
-        let tradable = await krypt.tradable.call();
-        assert.equal(tradable, true, "tradable was not turn on by owner");
+    it('balance of owner should be 1,000,000,000 * 10^10: ', async () => {
+        const contract = await Krypto.deployed();
+        const balance = await contract.balanceOf.call(accounts[0]);
+        assert.equal(balance, 10 ** 19, 'balance of owner is wrong');
     });
 
-    it("transfer should do it right", async() => {
-        let account_zero = accounts[0];
-        let account_one = accounts[1];
-        let amount = 10000000000000;
+    it('turnOnTradable() should do it right', async () => {
+        const accountZero = accounts[0];
+        const accountOne = accounts[1];
+        const contract = await Krypto.deployed();
 
-        let account_zero_starting_balance;
-        let account_one_starting_balance;
-        let account_zero_ending_balance;
-        let account_one_ending_balance;
+        await contract
+            .turnOnTradable({ from: accountOne })
+            .catch(function(error) {});
 
-        let instance = await krypto.deployed();
-        let krypt = instance;
+        const tradableOne = await contract.tradable.call();
+        assert.equal(
+            tradableOne,
+            false,
+            'tradable was turn on not by another address',
+        );
 
-        let balance = await krypt.balanceOf.call(account_zero);
+        await contract
+            .turnOnTradable({ from: accountZero })
+            .catch(function(error) {
+                console.log('revert detected from owner address');
+            });
 
-        account_zero_starting_balance = balance.toNumber();
-        balance = await krypt.balanceOf.call(account_one);
-        account_one_starting_balance = balance.toNumber();
+        const tradableZero = await contract.tradable.call();
+        assert.equal(tradableZero, true, 'tradable was not turn on by owner');
+    });
 
-        await krypt.transfer(account_one, amount, { from: account_zero });
+    it('transfer should do it right', async () => {
+        const accountZero = accounts[0];
+        const accountOne = accounts[1];
+        const amount = 10 ** 13;
 
-        balance = await krypt.balanceOf.call(account_zero);
-        account_zero_ending_balance = balance.toNumber();
-        balance = await krypt.balanceOf.call(account_one);
-        account_one_ending_balance = balance.toNumber();
+        let accountZeroStartingBalance;
+        let accountOneStartingBalance;
+        let accountZeroEndingBalance;
+        let accountOneEndingBalance;
 
-        assert.equal(account_zero_ending_balance, account_zero_starting_balance - amount, "Amount wasn't correctly taken from the sender");
-        assert.equal(account_one_ending_balance, account_one_starting_balance + amount, "Amount wasn't correctly sent to the receiver");
+        const contract = await Krypto.deployed();
+        let balance = await contract.balanceOf.call(accountZero);
 
+        accountZeroStartingBalance = balance.toNumber();
+        balance = await contract.balanceOf.call(accountOne);
+        accountOneStartingBalance = balance.toNumber();
+
+        await contract.transfer(accountOne, amount, { from: accountZero });
+
+        balance = await contract.balanceOf.call(accountZero);
+        accountZeroEndingBalance = balance.toNumber();
+        balance = await contract.balanceOf.call(accountOne);
+        accountOneEndingBalance = balance.toNumber();
+
+        assert.equal(
+            accountZeroEndingBalance,
+            accountZeroStartingBalance - amount,
+            "Amount was't correctly taken from the sender",
+        );
+
+        assert.equal(
+            accountOneEndingBalance,
+            accountOneStartingBalance + amount,
+            "Amount wasn't correctly sent to the receiver",
+        );
     });
 });
